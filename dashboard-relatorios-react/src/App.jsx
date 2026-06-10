@@ -333,31 +333,23 @@ export default function App() {
     if(!valor||valor.trim().length<15) return;
     setAiLoading(secao);
     try {
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY||"";
-      const r=await fetch("https://api.anthropic.com/v1/messages",{
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY||"";
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
         method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "x-api-key": apiKey,
-          "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-direct-browser-access":"true",
-        },
+        headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-          model:"claude-haiku-4-5-20251001",
-          max_tokens:1000,
-          messages:[{
-            role:"user",
-            content:`Corrija TODOS os erros ortográficos, acentuação e gramática do texto abaixo. Exemplos do que corrigir: "coando"→"quando", "executa"→"executa", palavras sem acento→com acento correto. Melhore também o estilo técnico se necessário. Mantenha exatamente o mesmo significado e todos os dados (nomes, números, siglas). Retorne APENAS o texto corrigido, sem nenhuma explicação, sem aspas, sem prefixo, sem sufixo.
+          contents:[{
+            parts:[{text:`Corrija TODOS os erros ortográficos, acentuação e gramática do texto abaixo. Exemplos do que corrigir: "coando"→"quando", "executa"→"executa", palavras sem acento→com acento correto. Melhore também o estilo técnico se necessário. Mantenha exatamente o mesmo significado e todos os dados (nomes, números, siglas). Retorne APENAS o texto corrigido, sem nenhuma explicação, sem aspas, sem prefixo, sem sufixo.
 
 Texto a corrigir:
 ${valor}
 
-Texto corrigido:`
+Texto corrigido:`}]
           }]
         })
       });
       const d=await r.json();
-      const txt=d.content?.find(b=>b.type==="text")?.text||"";
+      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||"";
       if(txt) setter(txt.trim());
     } catch(e){
       console.error("Erro aprimorar:",e);
