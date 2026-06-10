@@ -333,25 +333,36 @@ export default function App() {
     if(!valor||valor.trim().length<15) return;
     setAiLoading(secao);
     try {
+      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY||"";
       const r=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{
+          "Content-Type":"application/json",
+          "x-api-key": apiKey,
+          "anthropic-version":"2023-06-01",
+          "anthropic-dangerous-direct-browser-access":"true",
+        },
         body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
+          model:"claude-haiku-4-5-20251001",
           max_tokens:1000,
           messages:[{
             role:"user",
-            content:`Você é um assistente de redação técnica para relatórios de manutenção de inversores fotovoltaicos. Corrija erros ortográficos e gramaticais do texto abaixo e o aprimmore mantendo: o mesmo significado, o tom técnico e todos os dados específicos (nomes, números, códigos, siglas). Retorne SOMENTE o texto corrigido, sem explicações, sem aspas, sem introdução.
+            content:`Corrija TODOS os erros ortográficos, acentuação e gramática do texto abaixo. Exemplos do que corrigir: "coando"→"quando", "executa"→"executa", palavras sem acento→com acento correto. Melhore também o estilo técnico se necessário. Mantenha exatamente o mesmo significado e todos os dados (nomes, números, siglas). Retorne APENAS o texto corrigido, sem nenhuma explicação, sem aspas, sem prefixo, sem sufixo.
 
-Texto:
-${valor}`
+Texto a corrigir:
+${valor}
+
+Texto corrigido:`
           }]
         })
       });
       const d=await r.json();
       const txt=d.content?.find(b=>b.type==="text")?.text||"";
       if(txt) setter(txt.trim());
-    } catch(e){ console.error("Erro aprimorar:",e); }
+    } catch(e){
+      console.error("Erro aprimorar:",e);
+      alert("Erro ao aprimorar texto: " + (e.message||"verifique sua conexão"));
+    }
     setAiLoading(null);
   };
 
