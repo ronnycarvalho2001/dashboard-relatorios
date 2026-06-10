@@ -357,8 +357,8 @@ export default function App() {
   const [tratativas,setTratativas]   = useState("");
   const [causas,setCausas]           = useState("");
 
-  const [fotos,setFotos]           = useState(Array(14).fill(null).map(()=>({f1:null,f2:null})));
-  const [comentarios,setComentarios] = useState(Array(14).fill(""));
+  const [fotos,setFotos]           = useState(Array(32).fill(null).map(()=>({f1:null,f2:null})));
+  const [comentarios,setComentarios] = useState(Array(32).fill(""));
   const [numSlots,setNumSlots]     = useState(4);
 
   const [exportMsg,setExportMsg]       = useState("");
@@ -629,7 +629,7 @@ ${fotosHTML}
     setTecnico("");setTecnicoEmail("");
     setSupervisor("");setSupervisorEmail("");
     setIntroducao("");setIdentificacao("");setTratativas("");setCausas("");
-    setFotos(Array(14).fill(null).map(()=>({f1:null,f2:null})));setComentarios(Array(14).fill(""));
+    setFotos(Array(32).fill(null).map(()=>({f1:null,f2:null})));setComentarios(Array(32).fill(""));
     setNumSlots(4);setCompleted(new Set());setStep("info");
   };
 
@@ -705,12 +705,12 @@ ${fotosHTML}
     setIntroducao(row.introducao||""); setIdentificacao(row.identificacao||"");
     setTratativas(row.tratativas||""); setCausas(row.causas||"");
     setNumSlots(row.num_slots||4);
-    const c14 = Array(14).fill("");
-    if (row.comentarios?.length) row.comentarios.forEach((v,i)=>{ c14[i]=v; });
-    setComentarios(c14);
-    const f14 = Array(14).fill(null).map(()=>({f1:null,f2:null}));
-    if (row.fotos?.length) row.fotos.forEach((v,i)=>{ if(v) f14[i]=v; });
-    setFotos(f14);
+    const c32 = Array(32).fill("");
+    if (row.comentarios?.length) row.comentarios.forEach((v,i)=>{ c32[i]=v; });
+    setComentarios(c32);
+    const f32 = Array(32).fill(null).map(()=>({f1:null,f2:null}));
+    if (row.fotos?.length) row.fotos.forEach((v,i)=>{ if(v) f32[i]=v; });
+    setFotos(f32);
     currentIdRef.current = row.id;
     setHistMode(false); setStep("info");
   };
@@ -872,7 +872,7 @@ ${fotosHTML}
               borderRadius:6,color:C.muted,cursor:"pointer",fontSize:16,
               display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
           <span style={{fontSize:13,fontWeight:700,color:C.text,minWidth:20,textAlign:"center"}}>{numSlots}</span>
-          <button onClick={()=>setNumSlots(n=>Math.min(14,n+1))}
+          <button onClick={()=>setNumSlots(n=>Math.min(32,n+1))}
             style={{width:28,height:28,background:C.infoBg,border:`1px solid ${C.accent}55`,
               borderRadius:6,color:C.accent,cursor:"pointer",fontSize:16,
               display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
