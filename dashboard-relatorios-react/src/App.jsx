@@ -81,9 +81,9 @@ const STEPS=[
 ];
 
 // ─── COMPONENTES ─────────────────────────────────────────────────────────────
-function Field({label,required,children,hint}) {
+function Field({label,required,children,hint,style}) {
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:5}}>
+    <div style={{display:"flex",flexDirection:"column",gap:5,...style}}>
       <label style={{fontSize:11,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",
         color:C.muted,display:"flex",alignItems:"center",gap:4}}>
         {label}{required&&<span style={{color:C.danger,fontSize:13}}>*</span>}
@@ -346,6 +346,7 @@ export default function App() {
   const [numOS,setNumOS]       = useState("");
   const [data,setData]         = useState(today());
   const [natureza,setNatureza]  = useState("Manutenção Corretiva");
+  const [atividade,setAtividade] = useState("");
 
   const [tecnico,setTecnico]         = useState("");
   const [tecnicoEmail,setTecnicoEmail]  = useState("");
@@ -491,7 +492,7 @@ export default function App() {
   <div class="ml">Data:</div>        <div class="mv">${data}</div>
   <div class="ml">Setor:</div>       <div class="mv">${setor}</div>
   <div class="ml">Fabricante:</div>  <div class="mv">${fabricante}</div>
-  <div class="ml">Atividade:</div>   <div class="mv">Manutenção em inversor</div>
+  <div class="ml">Atividade:</div>   <div class="mv">${atividade}</div>
   <div class="ml">Nº Série:</div>    <div class="mv">${numSerie}</div>
   <div class="ml">Natureza:</div>    <div class="mv">${natureza}</div>
   <div class="ml">Nº OS/PT:</div>    <div class="mv">${numOS}</div>
@@ -582,7 +583,7 @@ ${fotosHTML}
   <div class="ml">Data:</div>        <div class="mv">${data}</div>
   <div class="ml">Setor:</div>       <div class="mv">${setor}</div>
   <div class="ml">Fabricante:</div>  <div class="mv">${fabricante}</div>
-  <div class="ml">Atividade:</div>   <div class="mv">Manuten\u00e7\u00e3o em inversor</div>
+  <div class="ml">Atividade:</div>   <div class="mv">${atividade}</div>
   <div class="ml">N\u00ba S\u00e9rie:</div>    <div class="mv">${numSerie}</div>
   <div class="ml">Natureza:</div>    <div class="mv">${natureza}</div>
   <div class="ml">N\u00ba OS/PT:</div>    <div class="mv">${numOS}</div>
@@ -625,7 +626,7 @@ ${fotosHTML}
     await salvarRelatorio();
     currentIdRef.current = null;
     setSetor("");setFabricante("INGETEAM");setNumSerie("");setNumOS("");
-    setData(today());setNatureza("Manutenção Corretiva");
+    setData(today());setNatureza("Manutenção Corretiva");setAtividade("");
     setTecnico("");setTecnicoEmail("");
     setSupervisor("");setSupervisorEmail("");
     setIntroducao("");setIdentificacao("");setTratativas("");setCausas("");
@@ -661,7 +662,7 @@ ${fotosHTML}
         f2: s.f2 ? await compressPhoto(s.f2.b64,s.f2.type) : null,
       })));
       const p = {setor,fabricante,num_serie:numSerie,num_os:numOS,
-        data_relatorio:data,natureza,tecnico,tecnico_email:tecnicoEmail,
+        data_relatorio:data,natureza,atividade,tecnico,tecnico_email:tecnicoEmail,
         supervisor,supervisor_email:supervisorEmail,
         introducao,identificacao,tratativas,causas,
         num_slots:numSlots,comentarios:comentarios.slice(0,numSlots),fotos:fotosC};
@@ -700,6 +701,7 @@ ${fotosHTML}
     setSetor(row.setor||""); setFabricante(row.fabricante||"INGETEAM");
     setNumSerie(row.num_serie||""); setNumOS(row.num_os||"");
     setData(row.data_relatorio||today()); setNatureza(row.natureza||"Manutenção Corretiva");
+    setAtividade(row.atividade||"");
     setTecnico(row.tecnico||""); setTecnicoEmail(row.tecnico_email||"");
     setSupervisor(row.supervisor||""); setSupervisorEmail(row.supervisor_email||"");
     setIntroducao(row.introducao||""); setIdentificacao(row.identificacao||"");
@@ -756,6 +758,9 @@ ${fotosHTML}
         <Field label="Natureza">
           <SInput value={natureza} onChange={setNatureza} placeholder="Selecione..."
             options={["Manutenção Corretiva","Manutenção Preventiva","Inspeção","Diagnóstico"]}/>
+        </Field>
+        <Field label="Atividade" style={{gridColumn:"1 / -1"}}>
+          <TInput value={atividade} onChange={setAtividade} placeholder="Ex: Manutenção em Inversor, Troca de String, Limpeza de Painel..."/>
         </Field>
       </div>
       {setor&&(
