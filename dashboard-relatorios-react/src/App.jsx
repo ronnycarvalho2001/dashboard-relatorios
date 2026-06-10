@@ -369,8 +369,44 @@ export default function App() {
   const [saveLoading,setSaveLoading]   = useState(false);
   const [histLoading,setHistLoading]   = useState(false);
   const [saveMsg,setSaveMsg]           = useState("");
+  const [autoSaveMsg,setAutoSaveMsg]   = useState("");
+  const currentIdRef                   = useRef(null);
 
   useEffect(()=>{ if(setor&&SERIES_MAP[setor]) setNumSerie(SERIES_MAP[setor]); },[setor]);
+
+  // ── Auto-save: dispara 4s após qualquer alteração ────────────────────────
+  useEffect(()=>{
+    const temConteudo = !!(setor||numOS||tecnico||introducao||identificacao||tratativas||causas);
+    if (!temConteudo) return;
+    setAutoSaveMsg("•••");
+    const t = setTimeout(async ()=>{
+      setAutoSaveMsg("Salvando…");
+      try {
+        const fotosC = await Promise.all(fotos.slice(0,numSlots).map(async s=>({
+          f1: s.f1 ? await compressPhoto(s.f1.b64,s.f1.type) : null,
+          f2: s.f2 ? await compressPhoto(s.f2.b64,s.f2.type) : null,
+        })));
+        const p = {setor,fabricante,num_serie:numSerie,num_os:numOS,
+          data_relatorio:data,natureza,tecnico,tecnico_email:tecnicoEmail,
+          supervisor,supervisor_email:supervisorEmail,
+          introducao,identificacao,tratativas,causas,
+          num_slots:numSlots,comentarios:comentarios.slice(0,numSlots),fotos:fotosC};
+        if (currentIdRef.current) {
+          const {error} = await supabase.from('relatorios').update(p).eq('id',currentIdRef.current);
+          if (error) throw error;
+        } else {
+          const {data:row,error} = await supabase.from('relatorios').insert(p).select('id').single();
+          if (error) throw error;
+          currentIdRef.current = row.id;
+        }
+        setAutoSaveMsg("✅ Salvo");
+      } catch(e){ setAutoSaveMsg("❌ Erro"); }
+      setTimeout(()=>setAutoSaveMsg(""),3000);
+    },4000);
+    return ()=>{ clearTimeout(t); setAutoSaveMsg(""); };
+  },[setor,fabricante,numSerie,numOS,data,natureza,tecnico,tecnicoEmail,
+     supervisor,supervisorEmail,introducao,identificacao,tratativas,causas,
+     numSlots,comentarios,fotos]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const markDone = s => setCompleted(p=>new Set([...p,s]));
 
@@ -584,8 +620,10 @@ ${fotosHTML}
     setTimeout(() => { try { w.print(); } catch(e){} }, 1200);
   };
 
-  const novoRelatorio=()=>{
-    if(!window.confirm("Criar novo relatório? Os dados atuais serão perdidos.")) return;
+  const novoRelatorio = async () => {
+    if (!window.confirm("Criar novo relatório? O atual será salvo no histórico antes de limpar.")) return;
+    await salvarRelatorio();
+    currentIdRef.current = null;
     setSetor("");setFabricante("INGETEAM");setNumSerie("");setNumOS("");
     setData(today());setNatureza("Manutenção Corretiva");
     setTecnico("");setTecnicoEmail("");
@@ -614,32 +652,33 @@ ${fotosHTML}
     img.src = `data:${type||'image/jpeg'};base64,${b64}`;
   });
 
-  // ── Salvar relatório ─────────────────────────────────────────────────────
+  // ── Salvar relatório (manual) ────────────────────────────────────────────
   const salvarRelatorio = async () => {
     setSaveLoading(true); setSaveMsg("");
     try {
-      const fotosComprimidas = await Promise.all(
-        fotos.slice(0, numSlots).map(async slot => ({
-          f1: slot.f1 ? await compressPhoto(slot.f1.b64, slot.f1.type) : null,
-          f2: slot.f2 ? await compressPhoto(slot.f2.b64, slot.f2.type) : null,
-        }))
-      );
-      const { error } = await supabase.from('relatorios').insert({
-        setor, fabricante, num_serie: numSerie, num_os: numOS,
-        data_relatorio: data, natureza, tecnico, tecnico_email: tecnicoEmail,
-        supervisor, supervisor_email: supervisorEmail,
-        introducao, identificacao, tratativas, causas,
-        num_slots: numSlots,
-        comentarios: comentarios.slice(0, numSlots),
-        fotos: fotosComprimidas,
-      });
-      if (error) throw error;
+      const fotosC = await Promise.all(fotos.slice(0,numSlots).map(async s=>({
+        f1: s.f1 ? await compressPhoto(s.f1.b64,s.f1.type) : null,
+        f2: s.f2 ? await compressPhoto(s.f2.b64,s.f2.type) : null,
+      })));
+      const p = {setor,fabricante,num_serie:numSerie,num_os:numOS,
+        data_relatorio:data,natureza,tecnico,tecnico_email:tecnicoEmail,
+        supervisor,supervisor_email:supervisorEmail,
+        introducao,identificacao,tratativas,causas,
+        num_slots:numSlots,comentarios:comentarios.slice(0,numSlots),fotos:fotosC};
+      if (currentIdRef.current) {
+        const {error} = await supabase.from('relatorios').update(p).eq('id',currentIdRef.current);
+        if (error) throw error;
+      } else {
+        const {data:row,error} = await supabase.from('relatorios').insert(p).select('id').single();
+        if (error) throw error;
+        currentIdRef.current = row.id;
+      }
       setSaveMsg("✅ Salvo!");
     } catch(e) {
       setSaveMsg("❌ " + (e.message||"Erro ao salvar"));
     }
     setSaveLoading(false);
-    setTimeout(() => setSaveMsg(""), 4000);
+    setTimeout(()=>setSaveMsg(""),4000);
   };
 
   // ── Abrir histórico ──────────────────────────────────────────────────────
@@ -672,6 +711,7 @@ ${fotosHTML}
     const f14 = Array(14).fill(null).map(()=>({f1:null,f2:null}));
     if (row.fotos?.length) row.fotos.forEach((v,i)=>{ if(v) f14[i]=v; });
     setFotos(f14);
+    currentIdRef.current = row.id;
     setHistMode(false); setStep("info");
   };
 
@@ -1026,6 +1066,14 @@ ${fotosHTML}
 
         {/* Ações */}
         <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {autoSaveMsg&&(
+            <span style={{fontSize:10,color:
+              autoSaveMsg==="•••"?C.dim:
+              autoSaveMsg.startsWith("✅")?C.success:
+              autoSaveMsg.startsWith("❌")?C.danger:C.muted}}>
+              {autoSaveMsg}
+            </span>
+          )}
           {saveMsg&&(
             <span style={{fontSize:11,color:saveMsg.startsWith("✅")?C.success:C.danger,
               fontWeight:700}}>{saveMsg}</span>
