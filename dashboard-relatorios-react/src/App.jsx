@@ -248,31 +248,6 @@ function FotoCard({n,foto1,foto2,comentario,onFoto1,onFoto2,onRemove1,onRemove2,
   );
 }
 
-// ─── BOTÃO CORRIGIR & APRIMORAR ───────────────────────────────────────────────
-// Chama a API Anthropic diretamente. Funciona em site próprio (pasta dist) desde
-// que seja servido com a chave de API configurada no proxy ou via header Authorization.
-// Fora do Claude.ai a chave deve ser injetada pelo servidor (não expor no frontend em produção).
-function BtnAprimorar({value,loading,onAprimorar}) {
-  if(!value||value.trim().length<15) return null;
-  return (
-    <button onClick={onAprimorar} disabled={loading}
-      title="Corrige ortografia e aprimora o texto mantendo seu conteúdo"
-      style={{display:"flex",alignItems:"center",gap:5,
-        background:loading?"transparent":C.infoBg,
-        border:`1px solid ${loading?C.border:C.accent+"66"}`,
-        color:loading?C.dim:C.accent,borderRadius:6,
-        padding:"5px 11px",cursor:loading?"default":"pointer",
-        fontSize:11,fontFamily:"inherit",fontWeight:700,letterSpacing:.3,
-        whiteSpace:"nowrap"}}>
-      {loading?(
-        <><span style={{width:10,height:10,border:`2px solid ${C.accent}44`,borderTopColor:C.accent,
-          borderRadius:"50%",animation:"spin .7s linear infinite",display:"inline-block"}}/> Aprimorando...</>
-      ):(
-        <>✦ Corrigir &amp; Aprimorar</>
-      )}
-    </button>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // APP
@@ -297,7 +272,6 @@ export default function App() {
   const [identificacao,setIdentificacao] = useState("");
   const [tratativas,setTratativas]   = useState("");
   const [causas,setCausas]           = useState("");
-  const [aiLoading,setAiLoading]     = useState(null);
 
   const [fotos,setFotos]           = useState(Array(14).fill(null).map(()=>({f1:null,f2:null})));
   const [comentarios,setComentarios] = useState(Array(14).fill(""));
@@ -327,36 +301,6 @@ export default function App() {
   const removeFoto2  = i   =>setFotos(p=>{const n=[...p];n[i]={...n[i],f2:null};return n;});
   const setComt      = (i,v)=>setComentarios(p=>{const n=[...p];n[i]=v;return n;});
   const fotoCount = fotos.filter(s=>s.f1||s.f2).length;
-
-  // ── Corrigir & Aprimorar texto ──────────────────────────────────────────────
-  const aprimorarTexto = async (secao, valor, setter) => {
-    if(!valor||valor.trim().length<15) return;
-    setAiLoading(secao);
-    try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY||"";
-      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          contents:[{
-            parts:[{text:`Corrija TODOS os erros ortográficos, acentuação e gramática do texto abaixo. Exemplos do que corrigir: "coando"→"quando", "executa"→"executa", palavras sem acento→com acento correto. Melhore também o estilo técnico se necessário. Mantenha exatamente o mesmo significado e todos os dados (nomes, números, siglas). Retorne APENAS o texto corrigido, sem nenhuma explicação, sem aspas, sem prefixo, sem sufixo.
-
-Texto a corrigir:
-${valor}
-
-Texto corrigido:`}]
-          }]
-        })
-      });
-      const d=await r.json();
-      const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||"";
-      if(txt) setter(txt.trim());
-    } catch(e){
-      console.error("Erro aprimorar:",e);
-      alert("Erro ao aprimorar texto: " + (e.message||"verifique sua conexão"));
-    }
-    setAiLoading(null);
-  };
 
 
   // ── Exportar PDF via jsPDF (script tag injection) ─────────────────────────
@@ -677,15 +621,13 @@ ${fotosHTML}
         <div>
           <div style={{fontSize:16,fontWeight:700,color:C.text}}>Descrição Técnica</div>
           <div style={{fontSize:12,color:C.muted,marginTop:2}}>
-            Preencha cada seção. O botão <strong style={{color:C.accent}}>✦ Corrigir &amp; Aprimorar</strong> corrige ortografia e melhora o texto sem alterar o conteúdo.
+            Preencha cada seção com os detalhes da ocorrência.
           </div>
         </div>
         {secoes.map(({key,label,val,set,ph})=>(
           <div key={key} style={{background:C.surface,borderRadius:10,border:`1px solid ${C.border}`,padding:16}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+            <div style={{marginBottom:8}}>
               <div style={{fontSize:13,fontWeight:700,color:C.text}}>{label}</div>
-              <BtnAprimorar value={val} loading={aiLoading===key}
-                onAprimorar={()=>aprimorarTexto(key,val,set)}/>
             </div>
             <TArea value={val} onChange={v=>{set(v);markDone("desc");}} placeholder={ph} rows={3}/>
           </div>
