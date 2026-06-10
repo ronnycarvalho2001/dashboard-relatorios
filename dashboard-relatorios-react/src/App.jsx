@@ -773,6 +773,9 @@ ${fotosHTML}
   return (
     <div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"'Segoe UI',Arial,sans-serif"}}>
       <style>{`
+        *{box-sizing:border-box}
+        html,body{margin:0;padding:0;background:#0f172a;min-height:100vh}
+        #root{min-height:100vh}
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
         @keyframes fi{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
         select option{background:#1e293b;color:#f1f5f9}
@@ -826,7 +829,10 @@ ${fotosHTML}
       <StepNav active={step} onStep={setStep} completed={completed}/>
 
       {/* CONTEÚDO */}
-      <div style={{maxWidth:860,margin:"0 auto",animation:"fi .25s ease"}}>
+      <div style={{maxWidth:860,margin:"0 auto",animation:"fi .25s ease",
+        ...(step==="fotos"||step==="desc"||step==="export"
+          ? {}
+          : {height:"calc(100vh - 95px)",overflowY:"hidden"})}}>
         {step==="info"   && renderInfo()}
         {step==="resp"   && renderResp()}
         {step==="desc"   && renderDesc()}
