@@ -337,6 +337,7 @@ function FotoCard({n,foto1,foto2,comentario,onFoto1,onFoto2,onRemove1,onRemove2,
 // APP
 // ═══════════════════════════════════════════════════════════════════════════════
 const MAX_SLOTS = 60;
+const TITULOS_PADRAO = ["Introdução","Identificação do Problema","Tratativas","Possível Causa"];
 
 export default function App() {
   const [step,setStep]         = useState("info");
@@ -359,6 +360,7 @@ export default function App() {
   const [identificacao,setIdentificacao] = useState("");
   const [tratativas,setTratativas]   = useState("");
   const [causas,setCausas]           = useState("");
+  const [titulos,setTitulos]         = useState(TITULOS_PADRAO);
 
   const [fotos,setFotos]           = useState(Array(MAX_SLOTS).fill(null).map(()=>({f1:null,f2:null})));
   const [comentarios,setComentarios] = useState(Array(MAX_SLOTS).fill(""));
@@ -377,6 +379,26 @@ export default function App() {
 
   useEffect(()=>{ if(setor&&SERIES_MAP[setor]) setNumSerie(SERIES_MAP[setor]); },[setor]);
 
+  // Grava no Supabase. Se a coluna "titulos" ainda não existir no banco,
+  // repete sem ela para não quebrar o salvamento.
+  const gravarRelatorio = async (p) => {
+    const run = async (payload) => {
+      if (currentIdRef.current) {
+        const {error} = await supabase.from('relatorios').update(payload).eq('id',currentIdRef.current);
+        return error;
+      }
+      const {data:row,error} = await supabase.from('relatorios').insert(payload).select('id').single();
+      if (!error) currentIdRef.current = row.id;
+      return error;
+    };
+    let error = await run(p);
+    if (error && /titulos/.test(error.message||"")) {
+      const semTitulos = {...p}; delete semTitulos.titulos;
+      error = await run(semTitulos);
+    }
+    if (error) throw error;
+  };
+
   // ── Auto-save: dispara 4s após qualquer alteração ────────────────────────
   useEffect(()=>{
     const temConteudo = !!(setor||numOS||tecnico||introducao||identificacao||tratativas||causas);
@@ -392,16 +414,9 @@ export default function App() {
         const p = {setor,fabricante,num_serie:numSerie,num_os:numOS,
           data_relatorio:data,natureza,tecnico,tecnico_email:tecnicoEmail,
           supervisor,supervisor_email:supervisorEmail,
-          introducao,identificacao,tratativas,causas,
+          introducao,identificacao,tratativas,causas,titulos,
           num_slots:numSlots,comentarios:comentarios.slice(0,numSlots),fotos:fotosC};
-        if (currentIdRef.current) {
-          const {error} = await supabase.from('relatorios').update(p).eq('id',currentIdRef.current);
-          if (error) throw error;
-        } else {
-          const {data:row,error} = await supabase.from('relatorios').insert(p).select('id').single();
-          if (error) throw error;
-          currentIdRef.current = row.id;
-        }
+        await gravarRelatorio(p);
         setAutoSaveMsg("✅ Salvo");
       } catch(e){ setAutoSaveMsg("❌ Erro"); }
       setTimeout(()=>setAutoSaveMsg(""),3000);
@@ -409,7 +424,7 @@ export default function App() {
     return ()=>{ clearTimeout(t); setAutoSaveMsg(""); };
   },[setor,fabricante,numSerie,numOS,data,natureza,tecnico,tecnicoEmail,
      supervisor,supervisorEmail,introducao,identificacao,tratativas,causas,
-     numSlots,comentarios,fotos]); // eslint-disable-line react-hooks/exhaustive-deps
+     titulos,numSlots,comentarios,fotos]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const markDone = s => setCompleted(p=>new Set([...p,s]));
 
@@ -501,10 +516,10 @@ export default function App() {
 </div>
 <div class="dh">DESCRIÇÃO:</div>
 <div class="db">
-  ${introducao?`<h3>1. Introdução</h3><p>${introducao}</p>`:""}
-  ${identificacao?`<h3>2. Identificação do Problema</h3><p>${identificacao}</p>`:""}
-  ${tratativas?`<h3>3. Tratativas</h3><p>${tratativas}</p>`:""}
-  ${causas?`<h3>4. Possível Causa</h3><p>${causas}</p>`:""}
+  ${introducao?`<h3>1. ${titulos[0]}</h3><p>${introducao}</p>`:""}
+  ${identificacao?`<h3>2. ${titulos[1]}</h3><p>${identificacao}</p>`:""}
+  ${tratativas?`<h3>3. ${titulos[2]}</h3><p>${tratativas}</p>`:""}
+  ${causas?`<h3>4. ${titulos[3]}</h3><p>${causas}</p>`:""}
 </div>
 ${fotosHTML}
 <div class="ass">
@@ -592,10 +607,10 @@ ${fotosHTML}
 </div>
 <div class="dh">DESCRI\u00c7\u00c3O:</div>
 <div class="db">
-  ${introducao?`<h3>1. Introdu\u00e7\u00e3o</h3><p>${introducao}</p>`:''}
-  ${identificacao?`<h3>2. Identifica\u00e7\u00e3o do Problema</h3><p>${identificacao}</p>`:''}
-  ${tratativas?`<h3>3. Tratativas</h3><p>${tratativas}</p>`:''}
-  ${causas?`<h3>4. Poss\u00edvel Causa</h3><p>${causas}</p>`:''}
+  ${introducao?`<h3>1. ${titulos[0]}</h3><p>${introducao}</p>`:''}
+  ${identificacao?`<h3>2. ${titulos[1]}</h3><p>${identificacao}</p>`:''}
+  ${tratativas?`<h3>3. ${titulos[2]}</h3><p>${tratativas}</p>`:''}
+  ${causas?`<h3>4. ${titulos[3]}</h3><p>${causas}</p>`:''}
 </div>
 ${fotosHTML}
 <div class="ass">
@@ -631,7 +646,7 @@ ${fotosHTML}
     setData(today());setNatureza("Manutenção Corretiva");setAtividade("");
     setTecnico("");setTecnicoEmail("");
     setSupervisor("");setSupervisorEmail("");
-    setIntroducao("");setIdentificacao("");setTratativas("");setCausas("");
+    setIntroducao("");setIdentificacao("");setTratativas("");setCausas("");setTitulos(TITULOS_PADRAO);
     setFotos(Array(MAX_SLOTS).fill(null).map(()=>({f1:null,f2:null})));setComentarios(Array(MAX_SLOTS).fill(""));
     setNumSlots(4);setCompleted(new Set());setStep("info");
   };
@@ -666,16 +681,9 @@ ${fotosHTML}
       const p = {setor,fabricante,num_serie:numSerie,num_os:numOS,
         data_relatorio:data,natureza,atividade,tecnico,tecnico_email:tecnicoEmail,
         supervisor,supervisor_email:supervisorEmail,
-        introducao,identificacao,tratativas,causas,
+        introducao,identificacao,tratativas,causas,titulos,
         num_slots:numSlots,comentarios:comentarios.slice(0,numSlots),fotos:fotosC};
-      if (currentIdRef.current) {
-        const {error} = await supabase.from('relatorios').update(p).eq('id',currentIdRef.current);
-        if (error) throw error;
-      } else {
-        const {data:row,error} = await supabase.from('relatorios').insert(p).select('id').single();
-        if (error) throw error;
-        currentIdRef.current = row.id;
-      }
+      await gravarRelatorio(p);
       setSaveMsg("✅ Salvo!");
     } catch(e) {
       setSaveMsg("❌ " + (e.message||"Erro ao salvar"));
@@ -708,6 +716,7 @@ ${fotosHTML}
     setSupervisor(row.supervisor||""); setSupervisorEmail(row.supervisor_email||"");
     setIntroducao(row.introducao||""); setIdentificacao(row.identificacao||"");
     setTratativas(row.tratativas||""); setCausas(row.causas||"");
+    setTitulos(TITULOS_PADRAO.map((t,i)=>row.titulos?.[i]||t));
     setNumSlots(row.num_slots||4);
     const cAll = Array(MAX_SLOTS).fill("");
     if (row.comentarios?.length) row.comentarios.forEach((v,i)=>{ cAll[i]=v; });
@@ -830,13 +839,13 @@ ${fotosHTML}
 
   const renderDesc=()=>{
     const secoes=[
-      {key:"introducao",     label:"1. Introdução",               val:introducao,    set:setIntroducao,
+      {key:"introducao",     val:introducao,    set:setIntroducao,
        ph:"Descreva o objetivo e contexto desta manutenção..."},
-      {key:"identificacao",  label:"2. Identificação do Problema", val:identificacao, set:setIdentificacao,
+      {key:"identificacao",  val:identificacao, set:setIdentificacao,
        ph:"Descreva a falha identificada no equipamento..."},
-      {key:"tratativas",     label:"3. Tratativas",                val:tratativas,    set:setTratativas,
+      {key:"tratativas",     val:tratativas,    set:setTratativas,
        ph:"Descreva os procedimentos e intervenções realizadas..."},
-      {key:"causas",         label:"4. Possível Causa",            val:causas,        set:setCausas,
+      {key:"causas",         val:causas,        set:setCausas,
        ph:"Aponte a causa raiz ou provável da falha..."},
     ];
     return (
@@ -847,10 +856,25 @@ ${fotosHTML}
             Preencha cada seção com os detalhes da ocorrência.
           </div>
         </div>
-        {secoes.map(({key,label,val,set,ph})=>(
+        {secoes.map(({key,val,set,ph},i)=>(
           <div key={key} style={{background:C.surface,borderRadius:10,border:`1px solid ${C.border}`,padding:16}}>
-            <div style={{marginBottom:8}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.text}}>{label}</div>
+            <div style={{marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontSize:13,fontWeight:700,color:C.text}}>{i+1}.</span>
+              <input value={titulos[i]} title="Clique para editar o título"
+                onChange={e=>{const v=e.target.value;setTitulos(p=>{const n=[...p];n[i]=v;return n;});}}
+                onFocus={e=>e.target.style.borderBottomColor=C.accent}
+                onBlur={e=>{e.target.style.borderBottomColor=C.border;
+                  if(!titulos[i].trim()) setTitulos(p=>{const n=[...p];n[i]=TITULOS_PADRAO[i];return n;});}}
+                style={{flex:1,minWidth:0,background:"transparent",border:"none",
+                  borderBottom:`1px dashed ${C.border}`,outline:"none",padding:"2px 0",
+                  fontSize:13,fontWeight:700,color:C.text,fontFamily:"inherit"}}/>
+              {titulos[i]!==TITULOS_PADRAO[i]&&(
+                <button onClick={()=>setTitulos(p=>{const n=[...p];n[i]=TITULOS_PADRAO[i];return n;})}
+                  title="Voltar ao título padrão"
+                  style={{background:"none",border:"none",color:C.muted,cursor:"pointer",
+                    fontSize:11,fontFamily:"inherit",padding:0,whiteSpace:"nowrap"}}>↺ padrão</button>
+              )}
+              <span style={{fontSize:12,color:C.muted}} aria-hidden="true">✎</span>
             </div>
             <TArea value={val} onChange={v=>{set(v);markDone("desc");}} placeholder={ph} rows={3}/>
           </div>
