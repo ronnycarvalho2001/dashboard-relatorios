@@ -336,6 +336,8 @@ function FotoCard({n,foto1,foto2,comentario,onFoto1,onFoto2,onRemove1,onRemove2,
 // ═══════════════════════════════════════════════════════════════════════════════
 // APP
 // ═══════════════════════════════════════════════════════════════════════════════
+const MAX_SLOTS = 60;
+
 export default function App() {
   const [step,setStep]         = useState("info");
   const [completed,setCompleted] = useState(new Set());
@@ -358,8 +360,8 @@ export default function App() {
   const [tratativas,setTratativas]   = useState("");
   const [causas,setCausas]           = useState("");
 
-  const [fotos,setFotos]           = useState(Array(32).fill(null).map(()=>({f1:null,f2:null})));
-  const [comentarios,setComentarios] = useState(Array(32).fill(""));
+  const [fotos,setFotos]           = useState(Array(MAX_SLOTS).fill(null).map(()=>({f1:null,f2:null})));
+  const [comentarios,setComentarios] = useState(Array(MAX_SLOTS).fill(""));
   const [numSlots,setNumSlots]     = useState(4);
 
   const [exportMsg,setExportMsg]       = useState("");
@@ -466,7 +468,7 @@ export default function App() {
   .db h3{font-size:11.5px;font-weight:700;margin:8px 0 3px;color:#1a2744}
   .db h3:first-child{margin-top:0}
   .db p{font-size:11px;line-height:1.6;margin-bottom:4px}
-  .foto-bloco{margin-bottom:8px;border:1px solid #ccc;overflow:hidden}
+  .foto-bloco{margin-bottom:8px;border:1px solid #ccc;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
   .foto-tit{background:#1a2744;color:#fff;font-weight:700;font-size:11px;
     text-align:center;padding:5px}
   .foto-pair{display:flex;gap:4px;background:#f0f0f0;padding:6px;justify-content:center}
@@ -475,7 +477,7 @@ export default function App() {
   .comt-box{border-top:1px solid #ddd;padding:5px 10px}
   .comt-lbl{font-weight:700;font-size:10px;color:#333;margin-bottom:1px}
   .comt-txt{font-size:10.5px;line-height:1.4}
-  .ass{display:grid;grid-template-columns:1fr 1fr;border:1px solid #bbb;margin-top:10px}
+  .ass{display:grid;grid-template-columns:1fr 1fr;border:1px solid #bbb;margin-top:10px;break-inside:avoid;page-break-inside:avoid}
   .ah{background:#1a2744;color:#fff;font-weight:700;font-size:11px;
     padding:6px 10px;border:0.5px solid #2e3d5c}
   .ab{padding:8px 10px;min-height:50px;border:0.5px solid #ddd}
@@ -556,7 +558,7 @@ ${fotosHTML}
   .db h3{font-size:11.5px;font-weight:700;margin:8px 0 3px;color:#1a2744}
   .db h3:first-child{margin-top:0}
   .db p{font-size:11px;line-height:1.6;margin-bottom:4px}
-  .foto-bloco{margin-bottom:8px;border:1px solid #ccc;overflow:hidden}
+  .foto-bloco{margin-bottom:8px;border:1px solid #ccc;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
   .foto-tit{background:#1a2744;color:#fff;font-weight:700;font-size:11px;
     text-align:center;padding:5px}
   .foto-pair{display:flex;gap:4px;background:#f0f0f0;padding:6px;justify-content:center}
@@ -565,7 +567,7 @@ ${fotosHTML}
   .comt-box{border-top:1px solid #ddd;padding:5px 10px}
   .comt-lbl{font-weight:700;font-size:10px;color:#333;margin-bottom:1px}
   .comt-txt{font-size:10.5px;line-height:1.4}
-  .ass{display:grid;grid-template-columns:1fr 1fr;border:1px solid #bbb;margin-top:10px}
+  .ass{display:grid;grid-template-columns:1fr 1fr;border:1px solid #bbb;margin-top:10px;break-inside:avoid;page-break-inside:avoid}
   .ah{background:#1a2744;color:#fff;font-weight:700;font-size:11px;
     padding:6px 10px;border:0.5px solid #2e3d5c}
   .ab{padding:8px 10px;min-height:50px;border:0.5px solid #ddd}
@@ -630,7 +632,7 @@ ${fotosHTML}
     setTecnico("");setTecnicoEmail("");
     setSupervisor("");setSupervisorEmail("");
     setIntroducao("");setIdentificacao("");setTratativas("");setCausas("");
-    setFotos(Array(32).fill(null).map(()=>({f1:null,f2:null})));setComentarios(Array(32).fill(""));
+    setFotos(Array(MAX_SLOTS).fill(null).map(()=>({f1:null,f2:null})));setComentarios(Array(MAX_SLOTS).fill(""));
     setNumSlots(4);setCompleted(new Set());setStep("info");
   };
 
@@ -707,12 +709,12 @@ ${fotosHTML}
     setIntroducao(row.introducao||""); setIdentificacao(row.identificacao||"");
     setTratativas(row.tratativas||""); setCausas(row.causas||"");
     setNumSlots(row.num_slots||4);
-    const c32 = Array(32).fill("");
-    if (row.comentarios?.length) row.comentarios.forEach((v,i)=>{ c32[i]=v; });
-    setComentarios(c32);
-    const f32 = Array(32).fill(null).map(()=>({f1:null,f2:null}));
-    if (row.fotos?.length) row.fotos.forEach((v,i)=>{ if(v) f32[i]=v; });
-    setFotos(f32);
+    const cAll = Array(MAX_SLOTS).fill("");
+    if (row.comentarios?.length) row.comentarios.forEach((v,i)=>{ cAll[i]=v; });
+    setComentarios(cAll);
+    const fAll = Array(MAX_SLOTS).fill(null).map(()=>({f1:null,f2:null}));
+    if (row.fotos?.length) row.fotos.forEach((v,i)=>{ if(v) fAll[i]=v; });
+    setFotos(fAll);
     currentIdRef.current = row.id;
     setHistMode(false); setStep("info");
   };
@@ -877,7 +879,7 @@ ${fotosHTML}
               borderRadius:6,color:C.muted,cursor:"pointer",fontSize:16,
               display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
           <span style={{fontSize:13,fontWeight:700,color:C.text,minWidth:20,textAlign:"center"}}>{numSlots}</span>
-          <button onClick={()=>setNumSlots(n=>Math.min(32,n+1))}
+          <button onClick={()=>setNumSlots(n=>Math.min(MAX_SLOTS,n+1))}
             style={{width:28,height:28,background:C.infoBg,border:`1px solid ${C.accent}55`,
               borderRadius:6,color:C.accent,cursor:"pointer",fontSize:16,
               display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
