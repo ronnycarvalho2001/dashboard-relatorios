@@ -482,7 +482,7 @@ export default function App() {
   .db{border:1px solid #bbb;border-top:none;padding:10px 12px;margin-bottom:10px}
   .db h3{font-size:11.5px;font-weight:700;margin:8px 0 3px;color:#1a2744}
   .db h3:first-child{margin-top:0}
-  .db p{font-size:11px;line-height:1.6;margin-bottom:4px}
+  .db p{font-size:11px;line-height:1.6;margin-bottom:4px;white-space:pre-wrap}
   .foto-bloco{margin-bottom:8px;border:1px solid #ccc;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
   .foto-tit{background:#1a2744;color:#fff;font-weight:700;font-size:11px;
     text-align:center;padding:5px}
@@ -491,7 +491,7 @@ export default function App() {
   .foto-single{max-width:100%;max-height:220px;object-fit:contain;display:block;margin:0 auto}
   .comt-box{border-top:1px solid #ddd;padding:5px 10px}
   .comt-lbl{font-weight:700;font-size:10px;color:#333;margin-bottom:1px}
-  .comt-txt{font-size:10.5px;line-height:1.4}
+  .comt-txt{font-size:10.5px;line-height:1.4;white-space:pre-wrap}
   .ass{display:grid;grid-template-columns:1fr 1fr;border:1px solid #bbb;margin-top:10px;break-inside:avoid;page-break-inside:avoid}
   .ah{background:#1a2744;color:#fff;font-weight:700;font-size:11px;
     padding:6px 10px;border:0.5px solid #2e3d5c}
@@ -572,7 +572,7 @@ ${fotosHTML}
   .db{border:1px solid #bbb;border-top:none;padding:10px 12px;margin-bottom:10px}
   .db h3{font-size:11.5px;font-weight:700;margin:8px 0 3px;color:#1a2744}
   .db h3:first-child{margin-top:0}
-  .db p{font-size:11px;line-height:1.6;margin-bottom:4px}
+  .db p{font-size:11px;line-height:1.6;margin-bottom:4px;white-space:pre-wrap}
   .foto-bloco{margin-bottom:8px;border:1px solid #ccc;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
   .foto-tit{background:#1a2744;color:#fff;font-weight:700;font-size:11px;
     text-align:center;padding:5px}
@@ -581,7 +581,7 @@ ${fotosHTML}
   .foto-single{max-width:100%;max-height:220px;object-fit:contain;display:block;margin:0 auto}
   .comt-box{border-top:1px solid #ddd;padding:5px 10px}
   .comt-lbl{font-weight:700;font-size:10px;color:#333;margin-bottom:1px}
-  .comt-txt{font-size:10.5px;line-height:1.4}
+  .comt-txt{font-size:10.5px;line-height:1.4;white-space:pre-wrap}
   .ass{display:grid;grid-template-columns:1fr 1fr;border:1px solid #bbb;margin-top:10px;break-inside:avoid;page-break-inside:avoid}
   .ah{background:#1a2744;color:#fff;font-weight:700;font-size:11px;
     padding:6px 10px;border:0.5px solid #2e3d5c}
